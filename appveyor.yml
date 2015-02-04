@@ -1,0 +1,46 @@
+# http://www.appveyor.com/docs/appveyor-yml
+
+# Version format
+version: "{build}-{branch}"
+# Don't clone the entire history
+clone_depth: 5
+# Don't actually build
+build: off
+
+# Only run on master
+# (native for now)
+branches:
+  only:
+    # - master
+    - native
+
+platform:
+  - x86
+  - x64
+# - Any CPU
+
+environment:
+  matrix:
+    # node.js
+    - nodejs_version: "0.10"
+    - nodejs_version: "0.11"
+    # io.js
+    - nodejs_version: "1.0"
+
+# Install tasks (runs after repo cloning)
+install:
+  # Get the latest stable version of Node 0.STABLE.latest
+  - ps: Update-NodeJsInstallation (Get-NodeJsLatestBuild $env:nodejs_version)
+  # Update npm to the latest version
+  - IF NOT %nodejs_version% == 1.0 npm -g install npm
+  - IF NOT %nodejs_version% == 1.0 set PATH=%APPDATA%\npm;%PATH%
+  # Install dependencies
+  - npm install
+
+# Post-install tasks
+test_script:
+  # Output useful info for debugging.
+  - node --version
+  - npm --version
+  # run tests
+  - npm test
